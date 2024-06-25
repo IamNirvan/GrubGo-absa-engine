@@ -1,6 +1,7 @@
 @echo off
 
 echo Installing dependencies...
+pip install fastapi "uvicorn[standard]"
 pip install "setfit[absa]"
 pip install transformers==4.39.0
 

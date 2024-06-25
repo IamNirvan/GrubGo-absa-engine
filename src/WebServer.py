@@ -2,16 +2,17 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 import logging
 from models.AnalyseSentimentRequest import AnalyseSentimentRequest
+from ABSA_model.ABSAModelV1 import ABSAModelV1
 
 # Initialize the logger...
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
 
+# Load the model...
+model = ABSAModelV1().load_model()
+
 app = FastAPI(debug=True)
 
 origins = [
-    "http://localhost.tiangolo.com",
-    "https://localhost.tiangolo.com",
-    "http://localhost",
     "http://localhost:8080",
 ]
 
@@ -30,8 +31,5 @@ async def root():
 @app.post("/analyse-sentiment")
 async def analyse_sentiment(payload: AnalyseSentimentRequest):
   print(payload)
-  logging.debug("extract the request")
-  logging.debug("extract the review to be analysed...")
-  logging.debug("load the model...")
-  logging.debug("analyse the sentiment...")
-  return {"message": "Analyse sentiment endpoint"}
+  preds = model.predict(payload.text.split("."))
+  return {"message": preds}
