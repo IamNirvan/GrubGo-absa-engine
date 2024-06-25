@@ -2,7 +2,7 @@ from setfit import AbsaModel, TrainingArguments, AbsaTrainer
 from datasets import load_dataset
 from transformers import EarlyStoppingCallback
 
-class ABSAModelV1:
+class ABSAModelTrainerV1:
     def load_model(self):
         print("loading model...")
         model = AbsaModel.from_pretrained(
@@ -56,7 +56,7 @@ class ABSAModelV1:
 
 
 if __name__ == "__main__":
-    model = ABSAModelV1()
+    model = ABSAModelTrainerV1()
     absa_model = model.load_model()
     train_dataset, eval_dataset = model.prepare_data()
     model.train(absa_model, train_dataset, eval_dataset)
