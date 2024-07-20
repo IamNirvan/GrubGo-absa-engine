@@ -48,7 +48,7 @@ app = WebServerV1(
     config=config
 ).app
 
-@app.post("/analyse-sentiment")
+@app.post("/analyse/sentiment")
 async def analyse_sentiment(payload: AnalyseSentimentRequest):
     logging.debug("received request to analyse sentiment")
     preds = model.predict(payload.text.split("."))
