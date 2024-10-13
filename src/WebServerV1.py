@@ -35,6 +35,7 @@ corsConfig = Cors(
 
 # Load the fine-tuned model
 model = ABSAModelV1().load_model()
+logging.debug("Model loaded successfully")
 
 # Assemble the config object
 config = Config(
@@ -42,11 +43,13 @@ config = Config(
     cors=corsConfig,
     model=model
 )
+logging.debug("Config object created successfully")
 
 # Create instance of the web server
 app = WebServerV1(
     config=config
 ).app
+logging.debug("Web server created successfully")
 
 @app.post("/analyse/sentiment")
 async def analyse_sentiment(payload: AnalyseSentimentRequest):
