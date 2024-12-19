@@ -1,10 +1,12 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 import logging
-from models.AnalyseSentimentRequest import AnalyseSentimentRequest
+from DTO.AnalyseSentimentRequest import AnalyseSentimentRequest
+from DTO.AnalyseSentimentRequestV2 import AnalyseSentimentRequestV2
 from ABSA_model.ABSAModelV1 import ABSAModelV1
 from util.Config import Config
 from util.Cors import Cors
+import re
 
 class WebServerV1 :
     def __init__(self, config:Config):
@@ -51,11 +53,49 @@ app = WebServerV1(
 ).app
 logging.debug("Web server created successfully")
 
-@app.post("/analyse/sentiment")
+@app.post("/v1/analyse/sentiment")
 async def analyse_sentiment(payload: AnalyseSentimentRequest):
     logging.debug("received request to analyse sentiment")
     preds = model.predict(payload.text.split("."))
-    return {"message": preds}
+    
+    # Flatten the nested lists
+    flattened_preds = [item for sublist in preds for item in sublist]
+    
+    return flattened_preds
+    
+@app.post("/v2/analyse/sentiment")
+async def analyse_sentiment_v2(payload: AnalyseSentimentRequestV2):
+    logging.debug("received request to analyse sentiment v2")
+
+    sentences = []
+    for text in payload.text:
+        sentences.extend(re.split(r'[.!?]', text))
+    
+    preds = model.predict(sentences)
+    flattened_preds = [item for sublist in preds for item in sublist]
+
+    # Group spans by their text and count polarities
+    span_dict = {}
+    for pred in flattened_preds:
+        span = pred['span']
+        polarity = pred['polarity']
+        if span not in span_dict:
+            span_dict[span] = {'positive': 0, 'neutral': 0, 'negative': 0}
+        span_dict[span][polarity] += 1
+
+    # Calculate the ratio of polarities for each span as percentages
+    grouped_preds = []
+    for span, counts in span_dict.items():
+        total = counts['positive'] + counts['neutral'] + counts['negative']
+        ratio = {
+            'span': span,
+            'positiveRatio': round((counts['positive'] / total * 100), 2) if total > 0 else 0,
+            'neutralRatio': round((counts['neutral'] / total * 100), 2) if total > 0 else 0,
+            'negativeRatio': round((counts['negative'] / total * 100), 2) if total > 0 else 0
+        }
+        grouped_preds.append(ratio)
+
+    return grouped_preds
 
     
 
